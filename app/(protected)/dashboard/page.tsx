@@ -63,7 +63,7 @@ export default function Component() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <button className="bg-blue-600 text-white px-4 py-2 rounded-3xl hover:bg-blue-700">
-          Add Subscription
+          <a href="/subscriptions/new/">Add Subscription</a>
         </button>
       </div>
 
