@@ -1,11 +1,13 @@
 // Landing page
-import { UserButton } from '@clerk/nextjs'
+
+import { HeroParallaxDemo } from "@/components/hero"
+
 
 const Home = () => {
   return (
-    <div>
-      <p>Home Landing Page</p>
-    </div>
+    <main className="p-4">
+      <HeroParallaxDemo/>
+    </main>
   )
 }
 

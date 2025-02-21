@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 import {
   AlertCircle,
   ArrowDownIcon,
@@ -27,6 +29,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+
 const chartData = [
   { month: "January", amount: 186 },
   { month: "February", amount: 305 },
@@ -51,12 +54,20 @@ const metrics = {
 };
 
 const subscriptions = [
-    { name: 'Netflix', amount: 15.99, nextBilling: '2024-03-15' },
-    { name: 'Spotify', amount: 9.99, nextBilling: '2024-03-20' },
-    { name: 'AWS', amount: 150.00, nextBilling: '2024-03-01' }
-  ];
+  { name: "Netflix", amount: 15.99, nextBilling: "2024-03-15" },
+  { name: "Spotify", amount: 9.99, nextBilling: "2024-03-20" },
+  { name: "AWS", amount: 150.0, nextBilling: "2024-03-01" },
+];
 
 export default function Component() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true); // Ensures this runs only on the client
+  }, []);
+
+  if (!mounted) return null; // Prevents rendering on the server
+
   return (
     <div className="p-6 space-y-6">
       {/* Page Header */}
@@ -143,75 +154,77 @@ export default function Component() {
       </div>
 
       <Card>
-  <CardHeader>
-    <CardTitle className="text-base">Spending Trend</CardTitle>
-    <CardDescription>
-      Showing subscription spendings for the last 6 months
-    </CardDescription>
-  </CardHeader>
-  <CardContent className="p-2">
-    <ChartContainer config={chartConfig} className="h-[500px] w-full">
-      <AreaChart
-        accessibilityLayer
-        data={chartData}
-        margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
-      >
-        <CartesianGrid vertical={false} />
-        <XAxis
-          dataKey="month"
-          tickLine={true}
-          axisLine={true}
-          tickMargin={4}
-          tickFormatter={(value) => value.slice(0, 3)}
-        />
-        <ChartTooltip
-          cursor={true}
-          content={<ChartTooltipContent indicator="dot" />}
-        />
-        <Area
-          dataKey="amount"
-          type="natural"
-          fill="var(--color-amount)"
-          fillOpacity={0.4}
-          stroke="var(--color-amount)"
-          stackId="a"
-        />
-      </AreaChart>
-    </ChartContainer>
-  </CardContent>
-  <CardFooter className="pt-2">
-    <div className="flex w-full items-start gap-1 text-xs">
-      <div className="grid gap-1">
-        <div className="flex items-center gap-1 font-medium leading-none">
-          Trending up by 5.2% this month <TrendingUp className="h-3 w-3" />
-        </div>
-        <div className="text-muted-foreground leading-none">
-          Jan - June 2024
-        </div>
-      </div>
-    </div>
-  </CardFooter>
-</Card>
-
+        <CardHeader>
+          <CardTitle className="text-base">Spending Trend</CardTitle>
+          <CardDescription>
+            Showing subscription spendings for the last 6 months
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="p-2">
+          <ChartContainer config={chartConfig} className="h-[500px] w-full">
+            <AreaChart
+              accessibilityLayer
+              data={chartData}
+              margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
+            >
+              <CartesianGrid vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickLine={true}
+                axisLine={true}
+                tickMargin={4}
+                tickFormatter={(value) => value.slice(0, 3)}
+              />
+              <ChartTooltip
+                cursor={true}
+                content={<ChartTooltipContent indicator="dot" />}
+              />
+              <Area
+                dataKey="amount"
+                type="natural"
+                fill="var(--color-amount)"
+                fillOpacity={0.4}
+                stroke="var(--color-amount)"
+                stackId="a"
+              />
+            </AreaChart>
+          </ChartContainer>
+        </CardContent>
+        <CardFooter className="pt-2">
+          <div className="flex w-full items-start gap-1 text-xs">
+            <div className="grid gap-1">
+              <div className="flex items-center gap-1 font-medium leading-none">
+                Spending up by 5.2% this month{" "}
+                <TrendingUp className="h-3 w-3" />
+              </div>
+              <div className="text-muted-foreground leading-none">
+                Jan - June 2024
+              </div>
+            </div>
+          </div>
+        </CardFooter>
+      </Card>
 
       <Card>
-          <CardHeader>
-            <CardTitle>Upcoming Renewals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {subscriptions.map(sub => (
-                <div key={sub.name} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{sub.name}</p>
-                    <p className="text-sm text-gray-500">Due {new Date(sub.nextBilling).toLocaleDateString()}</p>
-                  </div>
-                  <span className="font-bold">${sub.amount}</span>
+        <CardHeader>
+          <CardTitle>Upcoming Renewals</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {subscriptions.map((sub) => (
+              <div key={sub.name} className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">{sub.name}</p>
+                  <p className="text-sm text-gray-500">
+                    Due {new Date(sub.nextBilling).toLocaleDateString()}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <span className="font-bold">${sub.amount}</span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

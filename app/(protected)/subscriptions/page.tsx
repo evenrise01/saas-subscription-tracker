@@ -35,7 +35,7 @@ export default function SubscriptionsPage() {
       {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Subscriptions</h1>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-3xl hover:bg-blue-700 flex items-center">
           <Plus className="w-4 h-4 mr-2" />
           Add New
         </button>
