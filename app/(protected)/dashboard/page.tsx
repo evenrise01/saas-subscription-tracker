@@ -67,7 +67,7 @@ export default function Component() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Monthly Spending Metrics */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -143,59 +143,56 @@ export default function Component() {
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Spending Trend</CardTitle>
-          <CardDescription>
-            Showing subscription spendings for the last 6 months
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig}>
-            <AreaChart
-              accessibilityLayer
-              data={chartData}
-              margin={{
-                left: 10,
-                right: 10,
-              }}
-            >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 3)}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent indicator="dot" />}
-              />
-              <Area
-                dataKey="amount"
-                type="natural"
-                fill="var(--color-amount)"
-                fillOpacity={0.4}
-                stroke="var(--color-amount)"
-                stackId="a"
-              />
-            </AreaChart>
-          </ChartContainer>
-        </CardContent>
-        <CardFooter>
-          <div className="flex w-full items-start gap-2 text-sm">
-            <div className="grid gap-2">
-              <div className="flex items-center gap-2 font-medium leading-none">
-                Trending up by 5.2% this month{" "}
-                <TrendingUp className="h-4 w-4" />
-              </div>
-              <div className="flex items-center gap-2 leading-none text-muted-foreground">
-                January - June 2024
-              </div>
-            </div>
-          </div>
-        </CardFooter>
-      </Card>
+  <CardHeader>
+    <CardTitle className="text-base">Spending Trend</CardTitle>
+    <CardDescription>
+      Showing subscription spendings for the last 6 months
+    </CardDescription>
+  </CardHeader>
+  <CardContent className="p-2">
+    <ChartContainer config={chartConfig} className="h-[500px] w-full">
+      <AreaChart
+        accessibilityLayer
+        data={chartData}
+        margin={{ left: 10, right: 10, top: 5, bottom: 5 }}
+      >
+        <CartesianGrid vertical={false} />
+        <XAxis
+          dataKey="month"
+          tickLine={true}
+          axisLine={true}
+          tickMargin={4}
+          tickFormatter={(value) => value.slice(0, 3)}
+        />
+        <ChartTooltip
+          cursor={true}
+          content={<ChartTooltipContent indicator="dot" />}
+        />
+        <Area
+          dataKey="amount"
+          type="natural"
+          fill="var(--color-amount)"
+          fillOpacity={0.4}
+          stroke="var(--color-amount)"
+          stackId="a"
+        />
+      </AreaChart>
+    </ChartContainer>
+  </CardContent>
+  <CardFooter className="pt-2">
+    <div className="flex w-full items-start gap-1 text-xs">
+      <div className="grid gap-1">
+        <div className="flex items-center gap-1 font-medium leading-none">
+          Trending up by 5.2% this month <TrendingUp className="h-3 w-3" />
+        </div>
+        <div className="text-muted-foreground leading-none">
+          Jan - June 2024
+        </div>
+      </div>
+    </div>
+  </CardFooter>
+</Card>
+
 
       <Card>
           <CardHeader>
