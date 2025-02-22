@@ -4,12 +4,9 @@ export default function PublicLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen">
-      <nav className="p-4 border-b">
-        {/* Public navigation */}
-      </nav>
+    <div>
       {children}
-      <footer className="p-4 border-t">
+      <footer className="p-4">
         {/* Footer content */}
       </footer>
     </div>

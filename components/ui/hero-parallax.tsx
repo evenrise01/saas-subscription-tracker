@@ -107,7 +107,7 @@ export const Header = () => {
       <h1 className="text-2xl md:text-7xl font-bold dark:text-white">
         SubSync      </h1>
       <p className="max-w-2xl text-base md:text-xl mt-8 dark:text-neutral-200">
-       Seamlessly manage your subscriptions
+      Effortlessly manage all your subscriptions in one place. Save time, money, and never miss a payment again.
       </p>
     </div>
   );

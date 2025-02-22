@@ -1,24 +1,14 @@
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/theme-provider"
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
+  ClerkProvider
 } from '@clerk/nextjs'
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -34,22 +24,13 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <body className={`${inter.variable} antialiased`}>
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-            {/* <header> */}
-              {/* <SignedOut>
-                <SignInButton />
-                <SignUpButton />
-              </SignedOut>
-              <SignedIn>
-                <UserButton />
-              </SignedIn> */}
-            {/* </header> */}
             {children}
           </ThemeProvider>
         </body>
