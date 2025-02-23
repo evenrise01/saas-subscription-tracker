@@ -46,7 +46,7 @@ export const FloatingNav = ({
           maxWidth: "1200px",
         }}
         animate={{
-          y: 0,
+          y: isScrolled ? "16px" : 0,
           opacity: 1,
           width: isScrolled ? "750px" : "1200px",
         }}
@@ -55,11 +55,10 @@ export const FloatingNav = ({
           ease: "easeInOut",
         }}
         className={cn(
-          "flex fixed top-4 inset-x-0 mx-auto border border-transparent dark:border-white/[0.2] rounded-full z-[5000] px-6 py-3 items-center justify-between",
-          // Updated styles for blur and background
+          "flex fixed top-0 inset-x-0 mx-auto z-[5000] px-6 py-2 items-center justify-between",
           isScrolled
-            ? "bg-white/70 dark:bg-black/60 backdrop-blur-lg shadow-lg"
-            : "bg-transparent backdrop-blur-sm",
+            ? "border border-transparent dark:border-white/[0.2] rounded-full bg-white/70 dark:bg-black/60 backdrop-blur-lg shadow-lg"
+            : "bg-transparent border-none", // No border, transparent background when not scrolled
           className
         )}
       >
@@ -74,7 +73,8 @@ export const FloatingNav = ({
         </div>
 
         {/* Center Nav Items */}
-        <div className="flex space-x-6 absolute left-1/2 transform -translate-x-1/2 text-base">
+        <div className="flex space-x-6 absolute left-1/2 transform -translate-x-1/2 text-sm">
+          
           {navItems.map((navItem: any, idx: number) => (
             <Link
               key={`link=${idx}`}
