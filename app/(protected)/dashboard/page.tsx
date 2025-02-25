@@ -30,15 +30,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const chartData = [
-  { month: "January", amount: 186 },
-  { month: "February", amount: 305 },
-  { month: "March", amount: 237 },
-  { month: "April", amount: 73 },
-  { month: "May", amount: 209 },
-  { month: "June", amount: 214 },
-];
-
 const chartConfig = {
   amount: {
     label: "Amount spent",
@@ -46,27 +37,99 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const metrics = {
-  monthlySpending: 2200,
-  previousMonth: 2500,
-  savingsRate: 25,
-  activeSubscriptions: 3,
-};
-
-const subscriptions = [
-  { name: "Netflix", amount: 15.99, nextBilling: "2024-03-15" },
-  { name: "Spotify", amount: 9.99, nextBilling: "2024-03-20" },
-  { name: "AWS", amount: 150.0, nextBilling: "2024-03-01" },
-];
-
 export default function Component() {
   const [mounted, setMounted] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // State for API data
+  const [chartData, setChartData] = useState<Array<{month: string, amount: number}>>([]);
+  const [metrics, setMetrics] = useState({
+    monthlySpending: 0,
+    previousMonth: 0,
+    savingsRate: 0,
+    activeSubscriptions: 0,
+  });
+  const [subscriptions, setSubscriptions] = useState<Array<{name: string, amount: number, nextBilling: string}>>([]);
+  const [nextRenewal, setNextRenewal] = useState({ name: "", daysLeft: 0 });
+
+  // Fetch all necessary data
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch spending chart data
+        const chartResponse = await fetch('/api/spending/chart');
+        if (!chartResponse.ok) throw new Error('Failed to fetch chart data');
+        const chartData = await chartResponse.json();
+        
+        // Fetch metrics
+        const metricsResponse = await fetch('/api/metrics');
+        if (!metricsResponse.ok) throw new Error('Failed to fetch metrics');
+        const metricsData = await metricsResponse.json();
+        
+        // Fetch subscriptions
+        const subscriptionsResponse = await fetch('/api/subscriptions');
+        if (!subscriptionsResponse.ok) throw new Error('Failed to fetch subscriptions');
+        const subscriptionsData = await subscriptionsResponse.json();
+        
+        // Process data
+        setChartData(chartData);
+        setMetrics(metricsData);
+        setSubscriptions(subscriptionsData);
+        
+        // Find next upcoming renewal
+        if (subscriptionsData.length > 0) {
+          const sortedSubs = [...subscriptionsData].sort((a, b) => 
+            new Date(a.nextBilling).getTime() - new Date(b.nextBilling).getTime()
+          );
+          
+          const nextSub = sortedSubs[0];
+          const daysLeft = Math.ceil(
+            (new Date(nextSub.nextBilling).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)
+          );
+          
+          setNextRenewal({
+            name: nextSub.name,
+            daysLeft: daysLeft
+          });
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        setLoading(false);
+      }
+    };
+
+    if (mounted) {
+      fetchData();
+    }
+  }, [mounted]);
 
   useEffect(() => {
     setMounted(true); // Ensures this runs only on the client
   }, []);
 
   if (!mounted) return null; // Prevents rendering on the server
+  
+  if (loading) return <div className="p-6">Loading dashboard data...</div>;
+  if (error) return <div className="p-6 text-red-500">Error loading data: {error}</div>;
+
+  // Calculate pending alerts
+  const pendingBills = subscriptions.filter(sub => {
+    const dueDate = new Date(sub.nextBilling);
+    const today = new Date();
+    const daysDiff = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    return daysDiff <= 7 && daysDiff >= 0;
+  }).length;
+
+  // Calculate percentage change
+  const calculatePercentChange = (current: number, previous: number): string => {
+    if (previous === 0) return "0.0";
+    return ((Math.abs(current - previous) / previous) * 100).toFixed(1);
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -78,7 +141,7 @@ export default function Component() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1  md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Monthly Spending Metrics */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -94,11 +157,7 @@ export default function Component() {
           <CardContent>
             <div className="text-2xl font-bold">${metrics.monthlySpending}</div>
             <p className="text-xs text-gray-500">
-              {Math.abs(
-                ((metrics.monthlySpending - metrics.previousMonth) /
-                  metrics.previousMonth) *
-                  100
-              ).toFixed(1)}
+              {calculatePercentChange(metrics.monthlySpending, metrics.previousMonth)}
               % from last month
             </p>
           </CardContent>
@@ -134,7 +193,11 @@ export default function Component() {
               {metrics.activeSubscriptions}
             </div>
             <p className="text-xs text-gray-500">
-              Next renewal: Netflix in 5 days
+              {nextRenewal.daysLeft > 0 
+                ? `Next renewal: ${nextRenewal.name} in ${nextRenewal.daysLeft} days`
+                : nextRenewal.daysLeft === 0
+                  ? `Next renewal: ${nextRenewal.name} today`
+                  : 'No upcoming renewals'}
             </p>
           </CardContent>
         </Card>
@@ -146,8 +209,12 @@ export default function Component() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center space-x-2">
-              <AlertCircle className="text-yellow-500" />
-              <span className="text-sm">2 bills due this week</span>
+              <AlertCircle className={pendingBills > 0 ? "text-yellow-500" : "text-green-500"} />
+              <span className="text-sm">
+                {pendingBills > 0 
+                  ? `${pendingBills} bill${pendingBills === 1 ? '' : 's'} due this week`
+                  : 'No bills due this week'}
+              </span>
             </div>
           </CardContent>
         </Card>
@@ -193,12 +260,31 @@ export default function Component() {
         <CardFooter className="pt-2">
           <div className="flex w-full items-start gap-1 text-xs">
             <div className="grid gap-1">
-              <div className="flex items-center gap-1 font-medium leading-none">
-                Spending up by 5.2% this month{" "}
-                <TrendingUp className="h-3 w-3" />
-              </div>
+              {chartData.length >= 2 && (
+                <div className="flex items-center gap-1 font-medium leading-none">
+                  {chartData[chartData.length - 1].amount > chartData[chartData.length - 2].amount ? (
+                    <>
+                      Spending up by {calculatePercentChange(
+                        chartData[chartData.length - 1].amount,
+                        chartData[chartData.length - 2].amount
+                      )}% this month{" "}
+                      <TrendingUp className="h-3 w-3" />
+                    </>
+                  ) : (
+                    <>
+                      Spending down by {calculatePercentChange(
+                        chartData[chartData.length - 2].amount,
+                        chartData[chartData.length - 1].amount
+                      )}% this month{" "}
+                      <ArrowDownIcon className="h-3 w-3" />
+                    </>
+                  )}
+                </div>
+              )}
               <div className="text-muted-foreground leading-none">
-                Jan - June 2024
+                {chartData.length > 0 ? 
+                  `${chartData[0].month} - ${chartData[chartData.length - 1].month} ${new Date().getFullYear()}` : 
+                  'No data available'}
               </div>
             </div>
           </div>
@@ -210,19 +296,23 @@ export default function Component() {
           <CardTitle>Upcoming Renewals</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {subscriptions.map((sub) => (
-              <div key={sub.name} className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">{sub.name}</p>
-                  <p className="text-sm text-gray-500">
-                    Due {new Date(sub.nextBilling).toLocaleDateString()}
-                  </p>
+          {subscriptions.length > 0 ? (
+            <div className="space-y-4">
+              {subscriptions.map((sub) => (
+                <div key={sub.name} className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{sub.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Due {new Date(sub.nextBilling).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <span className="font-bold">${sub.amount}</span>
                 </div>
-                <span className="font-bold">${sub.amount}</span>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-500">No active subscriptions found.</p>
+          )}
         </CardContent>
       </Card>
     </div>

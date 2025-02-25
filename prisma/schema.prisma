@@ -1,0 +1,114 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int            @id @default(autoincrement()) @map("user_id")
+  username      String         @unique
+  email         String         @unique
+  passwordHash  String         @map("password_hash")
+  firstName     String?        @map("first_name")
+  lastName      String?        @map("last_name")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  lastLogin     DateTime?      @map("last_login")
+  subscriptions Subscription[]
+  notifications Notification[]
+  settings      UserSettings?
+
+  @@map("users")
+}
+
+model Category {
+  id          Int       @id @default(autoincrement()) @map("category_id")
+  name        String    @unique
+  description String?
+  services    Service[]
+
+  @@map("categories")
+}
+
+model Service {
+  id          Int            @id @default(autoincrement()) @map("service_id")
+  name        String         @unique
+  website     String?
+  logoUrl     String?        @map("logo_url")
+  categoryId  Int?           @map("category_id")
+  category    Category?      @relation(fields: [categoryId], references: [id])
+  subscriptions Subscription[]
+
+  @@map("services")
+}
+
+model Subscription {
+  id               Int          @id @default(autoincrement()) @map("subscription_id")
+  userId           Int          @map("user_id")
+  serviceId        Int?         @map("service_id")
+  subscriptionName String       @map("subscription_name")
+  description      String?
+  billingAmount    Decimal      @map("billing_amount")
+  billingCycle     String       @map("billing_cycle")
+  startDate        DateTime     @map("start_date")
+  nextBillingDate  DateTime     @map("next_billing_date")
+  endDate          DateTime?    @map("end_date")
+  autoRenew        Boolean      @default(true) @map("auto_renew")
+  reminderDays     Int?         @default(7) @map("reminder_days")
+  active           Boolean      @default(true)
+  createdAt        DateTime     @default(now()) @map("created_at")
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  service          Service?     @relation(fields: [serviceId], references: [id])
+  payments         Payment[]
+  notifications    Notification[]
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id             Int          @id @default(autoincrement()) @map("payment_id")
+  subscriptionId Int          @map("subscription_id")
+  amount         Decimal
+  paymentDate    DateTime     @map("payment_date")
+  status         String
+  paymentMethod  String?      @map("payment_method")
+  notes          String?
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
+}
+
+model Notification {
+  id               Int          @id @default(autoincrement()) @map("notification_id")
+  userId           Int          @map("user_id")
+  subscriptionId   Int?         @map("subscription_id")
+  notificationType String       @map("notification_type")
+  message          String
+  createdAt        DateTime     @default(now()) @map("created_at")
+  read             Boolean      @default(false)
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription     Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model UserSettings {
+  id               Int      @id @default(autoincrement()) @map("setting_id")
+  userId           Int      @unique @map("user_id")
+  currency         String   @default("USD")
+  notificationEmail Boolean @default(true) @map("notification_email")
+  notificationApp  Boolean @default(true) @map("notification_app")
+  theme            String   @default("light")
+  budgetLimit      Decimal? @map("budget_limit")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_settings")
+}
